@@ -5,6 +5,8 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import java.nio.charset.StandardCharsets;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -14,9 +16,15 @@ import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
-    private final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(
-            "modernprogrammingtechnologiesisinterestingandusefullstudentsloveitreadwritecodeenjoyaprogrammerslifeletusnotgetboredwithrestap".getBytes()
-    );
+    private final SecretKey secretKey;
+
+    public JwtService(@Value("${app.jwt.secret}") String secret) {
+        if (secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalArgumentException("JWT_SECRET must contain at least 32 bytes");
+        }
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
     public String generateToken(String username, Set<Role> roles) {
         List<String> roleNames = roles.stream()
                 .map(Enum::name)
@@ -26,7 +34,7 @@ public class JwtService {
                 .claim("roles", roleNames)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 час
-                .signWith(SECRET_KEY)
+                .signWith(secretKey)
                 .compact();
     }
     public String extractUsername(String token) {
@@ -41,7 +49,7 @@ public class JwtService {
     }
     private Claims parseClaims(String token) {
         return Jwts.parser()
-                .verifyWith(SECRET_KEY)
+                .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

@@ -1,18 +1,21 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
+
+app:
+  demo-data:
+    enabled: ${DEMO_DATA_ENABLED:false}
+  jwt:
+    secret: ${JWT_SECRET:local-development-secret-replace-before-deployment-1234567890}
 
 spring:
-  main:
-    allow-circular-references: true
   application:
     name: student
   jpa:
-    hibernate.ddl-auto: update
+    hibernate:
+      ddl-auto: update
   datasource:
-    url: jdbc:postgresql://localhost:5432/students_db
-    username: postgres
-    password: postgres
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/students_db}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
     hikari:
-      schema: students_schema
-      connection-init-sql: CREATE SCHEMA IF NOT EXISTS students_schema;
       connection-timeout: 10000

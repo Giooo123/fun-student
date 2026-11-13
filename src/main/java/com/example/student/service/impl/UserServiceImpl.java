@@ -75,11 +75,23 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public UserResponse updateUser(UserRequest userRequest) {
-        User existedUser = findByEmail(userRequest.getEmail());
-        existedUser.setEmail(userRequest.getEmail());
-        existedUser.setRoles(userRequest.getRoles());
-        return null;
+    public UserResponse updateUser(Long id, UserRequest userRequest) {
+        User existedUser = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User with ID " + id + " not found!"));
+        if (userRequest.getEmail() != null && !userRequest.getEmail().isBlank()
+                && !userRequest.getEmail().equals(existedUser.getEmail())) {
+            if (userRepository.existsByEmail(userRequest.getEmail())) {
+                throw new EmailAlreadyExistsException("Email already exists");
+            }
+            existedUser.setEmail(userRequest.getEmail());
+        }
+        if (userRequest.getRoles() != null && !userRequest.getRoles().isEmpty()) {
+            existedUser.setRoles(userRequest.getRoles());
+        }
+        if (userRequest.getPassword() != null && !userRequest.getPassword().isBlank()) {
+            existedUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+        }
+        return userMapper.toResponse(userRepository.save(existedUser));
     }
 
     @Override

@@ -9,6 +9,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Set;
 
@@ -18,9 +19,12 @@ public class AppInitializer {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final StudentRepository studentRepository;
+    @Value("${app.demo-data.enabled:false}")
+    private boolean demoDataEnabled;
 
     @PostConstruct
     public void init() {
+        if (!demoDataEnabled) return;
         createUserIfNotExists("superadmin@example.com", "superAdmin", Set.of(Role.SUPER_ADMIN));
         createUserIfNotExists("admin@example.com", "admin", Set.of(Role.ADMIN));
         createUserIfNotExists("teacher@example.com", "teacher", Set.of(Role.TEACHER));
